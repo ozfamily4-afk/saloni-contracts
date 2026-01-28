@@ -1,7 +1,7 @@
 (function() {
   "use strict";
   
-  var API_URL = "https://script.google.com/macros/s/AKfycbyq1fZg1aXzKeSu_aDe0n1GrIC6x1PuaDvv2yhdioUMnAnx9ZbJLpuh7GUPiOZKvKhbMA/exec";
+  var API_URL = "https://script.google.com/macros/s/AKfycbxlxSO2GzUZwrc6h6aHDlBTKtEmsNv2yRPXdrsSdPP_oUJCp27dRKNgLi8udZCeNbmfKQ/exec";
   var ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/26176320/uqah9h6/";
   var currentContractId = null;
   var currentContractData = null;
