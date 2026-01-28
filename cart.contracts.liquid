@@ -392,33 +392,40 @@
   
   document.getElementById("confirm-delete-btn").onclick = function() {
     if (!deleteTargetId) return;
-    
+
     var btn = this;
     btn.innerHTML = "Deleting...";
     btn.disabled = true;
-    
-    console.log("Deleting contract:", deleteTargetId);
-    
-    // GET ile delete (daha güvenilir)
-    fetch(API_URL + "?action=delete&id=" + deleteTargetId)
-      .then(function(r) { return r.text(); })
-      .then(function(text) {
-        console.log("Delete response:", text);
 
-        // JSON parse etmeyi dene, başarısız olursa text'i kontrol et
+    var deleteUrl = API_URL + "?action=delete&id=" + encodeURIComponent(deleteTargetId);
+    console.log("=== DELETE DEBUG ===");
+    console.log("Delete URL:", deleteUrl);
+    console.log("Target ID:", deleteTargetId);
+    console.log("Target ID type:", typeof deleteTargetId);
+
+    fetch(deleteUrl)
+      .then(function(r) {
+        console.log("Response status:", r.status);
+        console.log("Response ok:", r.ok);
+        return r.text();
+      })
+      .then(function(text) {
+        console.log("Raw response text:", text);
+        console.log("Response length:", text.length);
+
+        // JSON parse etmeyi dene
         var result;
         try {
           result = JSON.parse(text);
+          console.log("Parsed JSON:", result);
         } catch(e) {
-          // "OK" gibi düz metin döndüyse başarılı say
-          if (text === "OK" || text === "ok" || text === "deleted" || text === "success") {
-            result = { success: true };
-          } else {
-            result = { success: false, error: text };
-          }
+          console.error("JSON parse failed:", e.message);
+          // JSON değilse hata olarak işaretle
+          result = { success: false, error: "Invalid response: " + text.substring(0, 100) };
         }
 
-        if (result.success || result.deleted) {
+        if (result.success === true || result.deleted === true) {
+          console.log("Delete successful, removing from list");
           // Listeden kaldır
           allContracts = allContracts.filter(function(c) {
             return String(c.id) !== String(deleteTargetId);
@@ -427,16 +434,19 @@
           renderStats(allContracts);
           renderLeaderboard(allContracts);
         } else {
-          alert("Delete failed: " + (result.error || "Unknown error"));
+          console.error("Delete failed:", result);
+          alert("Delete failed: " + (result.error || JSON.stringify(result)));
         }
-        
+
         closeDeleteModal();
         btn.innerHTML = "Delete";
         btn.disabled = false;
       })
       .catch(function(err) {
-        console.error("Delete error:", err);
-        alert("Error: " + err.message);
+        console.error("=== DELETE FETCH ERROR ===");
+        console.error("Error:", err);
+        console.error("Error message:", err.message);
+        alert("Network Error: " + err.message);
         btn.innerHTML = "Delete";
         btn.disabled = false;
         closeDeleteModal();
