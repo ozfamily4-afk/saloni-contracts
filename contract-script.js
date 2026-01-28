@@ -202,32 +202,52 @@
     document.querySelectorAll(".js-product-item").forEach(function(c) {
       subTotal += parseFloat(c.getAttribute("data-current-total") || (parseInt(c.getAttribute("data-base-price")) * parseInt(c.getAttribute("data-qty"))));
     });
-    
+
     var area = document.querySelector(".js-total-area");
     if (!area) return;
-    
+
     var pctInput = area.querySelector(".js-total-pct");
+    var shippingInput = area.querySelector(".js-shipping-cost");
     var pctVal = pctInput ? (parseFloat(pctInput.value) || 0) : 0;
+    var shippingVal = shippingInput ? (parseFloat(shippingInput.value) || 0) * 100 : 0;
+
     var finalDisplay = document.querySelector(".js-final-total");
     var oldDisplay = document.querySelector(".js-old-total");
     var lbl = document.querySelector(".js-total-discount-label");
 
+    var subtotalDisplay = document.querySelector(".js-subtotal-display");
+    var discountRow = document.querySelector(".js-discount-row");
+    var discountAmountEl = document.querySelector(".js-discount-amount");
+    var shippingDisplay = document.querySelector(".js-shipping-display");
+    var taxDisplay = document.querySelector(".js-tax-display");
+
+    var discountValue = subTotal * (pctVal / 100);
+    var afterDiscount = subTotal - discountValue;
+    var taxValue = afterDiscount * 0.06;
+    var grandTotal = afterDiscount + taxValue + shippingVal;
+
+    if (subtotalDisplay) subtotalDisplay.innerText = formatMoney(subTotal);
+
     if (pctVal > 0) {
-      var finalAmount = subTotal * (1 - (pctVal / 100));
+      if (discountRow) discountRow.style.display = "flex";
+      if (discountAmountEl) discountAmountEl.innerText = "-" + formatMoney(discountValue);
       if (oldDisplay) {
         oldDisplay.innerText = formatMoney(subTotal);
         oldDisplay.style.display = "block";
       }
-      if (finalDisplay) finalDisplay.innerText = formatMoney(finalAmount);
       if (lbl) {
         lbl.innerHTML = "Total Discount: <span class=\"value-text\" style=\"color:var(--brand-primary)\">%" + pctVal + "</span>";
         lbl.style.display = "inline-block";
       }
     } else {
+      if (discountRow) discountRow.style.display = "none";
       if (oldDisplay) oldDisplay.style.display = "none";
-      if (finalDisplay) finalDisplay.innerText = formatMoney(subTotal);
       if (lbl) lbl.style.display = "none";
     }
+
+    if (shippingDisplay) shippingDisplay.innerText = formatMoney(shippingVal);
+    if (taxDisplay) taxDisplay.innerText = formatMoney(taxValue);
+    if (finalDisplay) finalDisplay.innerText = formatMoney(grandTotal);
   };
 
   function getContractData() {
@@ -239,7 +259,9 @@
     var notesEl = document.getElementById("payment-notes");
     var taxNotesEl = document.getElementById("tax-notes");
     var refIdEl = document.getElementById("contract-ref-id");
-    
+    var totalPctEl = document.querySelector(".js-total-pct");
+    var shippingCostEl = document.querySelector(".js-shipping-cost");
+
     var totalAmount = 0;
     var products = [];
     
@@ -271,6 +293,12 @@
       });
     });
     
+    var totalPct = totalPctEl ? (parseFloat(totalPctEl.value) || 0) : 0;
+    var shippingCost = shippingCostEl ? (parseFloat(shippingCostEl.value) || 0) : 0;
+    var afterDiscount = totalAmount * (1 - totalPct / 100);
+    var taxAmount = afterDiscount * 0.06;
+    var grandTotal = afterDiscount + taxAmount + (shippingCost * 100);
+
     return {
       customer_name: clientNameInp ? clientNameInp.value : "",
       phone: formatPhoneNumber(phoneInp ? phoneInp.value : ""),
@@ -280,7 +308,9 @@
       payment_notes: notesEl ? notesEl.value : "",
       tax_notes: taxNotesEl ? taxNotesEl.value : "",
       ref_id: refIdEl ? refIdEl.value : "",
-      total_amount: totalAmount / 100,
+      total_amount: grandTotal / 100,
+      total_pct: totalPct,
+      shipping_cost: shippingCost,
       products: products
     };
   }
@@ -372,7 +402,7 @@
     
     if (products && products.length > 0) {
       renderProducts(products, isViewMode);
-      
+
       var totalArea = document.querySelector(".js-total-area");
       if (totalArea) {
         var total = products.reduce(function(sum, p) {
@@ -381,6 +411,20 @@
         totalArea.setAttribute("data-base-total", total);
       }
     }
+
+    var totalPctEl = document.querySelector(".js-total-pct");
+    var shippingCostEl = document.querySelector(".js-shipping-cost");
+
+    if (totalPctEl && contract.total_pct) {
+      totalPctEl.value = contract.total_pct;
+    }
+    if (shippingCostEl && contract.shipping_cost) {
+      shippingCostEl.value = contract.shipping_cost;
+    }
+
+    setTimeout(function() {
+      recalcTotal();
+    }, 100);
   }
 
   window.saveContractDraft = function() {
@@ -580,19 +624,25 @@
 
     var total10 = document.querySelector(".js-total-10");
     var totalPct = document.querySelector(".js-total-pct");
+    var shippingCost = document.querySelector(".js-shipping-cost");
     var totalReset = document.querySelector(".js-reset-total");
-    
+
     if(total10) total10.onclick = function() {
       totalPct.value = 10;
       recalcTotal();
     };
-    
+
     if(totalPct) totalPct.oninput = function() {
       recalcTotal();
     };
-    
+
+    if(shippingCost) shippingCost.oninput = function() {
+      recalcTotal();
+    };
+
     if(totalReset) totalReset.onclick = function() {
       totalPct.value = "";
+      if(shippingCost) shippingCost.value = "";
       recalcTotal();
     };
 
