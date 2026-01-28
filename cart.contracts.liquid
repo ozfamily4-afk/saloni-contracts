@@ -401,10 +401,23 @@
     
     // GET ile delete (daha güvenilir)
     fetch(API_URL + "?action=delete&id=" + deleteTargetId)
-      .then(function(r) { return r.json(); })
-      .then(function(result) {
-        console.log("Delete result:", result);
-        
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        console.log("Delete response:", text);
+
+        // JSON parse etmeyi dene, başarısız olursa text'i kontrol et
+        var result;
+        try {
+          result = JSON.parse(text);
+        } catch(e) {
+          // "OK" gibi düz metin döndüyse başarılı say
+          if (text === "OK" || text === "ok" || text === "deleted" || text === "success") {
+            result = { success: true };
+          } else {
+            result = { success: false, error: text };
+          }
+        }
+
         if (result.success || result.deleted) {
           // Listeden kaldır
           allContracts = allContracts.filter(function(c) {
