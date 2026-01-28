@@ -253,6 +253,7 @@
   function getContractData() {
     var repEl = document.getElementById("sales-rep-select");
     var phoneInp = document.getElementById("client-phone");
+    var emailInp = document.getElementById("client-email");
     var clientNameInp = document.getElementById("client-name");
     var addressEl = document.getElementById("client-address");
     var deliveryEl = document.getElementById("delivery-week-selector");
@@ -302,6 +303,7 @@
     return {
       customer_name: clientNameInp ? clientNameInp.value : "",
       phone: formatPhoneNumber(phoneInp ? phoneInp.value : ""),
+      email: emailInp ? emailInp.value : "",
       address: addressEl ? addressEl.value : "",
       sales_rep: repEl ? repEl.value : "",
       delivery_week: deliveryEl ? deliveryEl.value : "",
@@ -361,15 +363,17 @@
     
     var clientNameEl = document.getElementById("client-name");
     var clientPhoneEl = document.getElementById("client-phone");
+    var clientEmailEl = document.getElementById("client-email");
     var clientAddressEl = document.getElementById("client-address");
     var salesRepEl = document.getElementById("sales-rep-select");
     var deliveryEl = document.getElementById("delivery-week-selector");
     var paymentNotesEl = document.getElementById("payment-notes");
     var taxNotesEl = document.getElementById("tax-notes");
     var refIdEl = document.getElementById("contract-ref-id");
-    
+
     if (clientNameEl) clientNameEl.value = contract.customer_name || contract.customer || "";
     if (clientPhoneEl) clientPhoneEl.value = contract.phone || "";
+    if (clientEmailEl) clientEmailEl.value = contract.email || "";
     if (clientAddressEl) clientAddressEl.value = contract.address || "";
     if (paymentNotesEl) paymentNotesEl.value = contract.payment_notes || "";
     if (taxNotesEl) taxNotesEl.value = contract.tax_notes || "";
