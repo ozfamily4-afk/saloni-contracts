@@ -260,6 +260,7 @@
     var notesEl = document.getElementById("payment-notes");
     var taxNotesEl = document.getElementById("tax-notes");
     var refIdEl = document.getElementById("contract-ref-id");
+    var orderDateEl = document.getElementById("order-date");
     var totalPctEl = document.querySelector(".js-total-pct");
     var shippingCostEl = document.querySelector(".js-shipping-cost");
 
@@ -310,6 +311,7 @@
       payment_notes: notesEl ? notesEl.value : "",
       tax_notes: taxNotesEl ? taxNotesEl.value : "",
       ref_id: refIdEl ? refIdEl.value : "",
+      order_date: orderDateEl ? orderDateEl.value : "",
       total_amount: grandTotal / 100,
       total_pct: totalPct,
       shipping_cost: shippingCost,
@@ -370,6 +372,7 @@
     var paymentNotesEl = document.getElementById("payment-notes");
     var taxNotesEl = document.getElementById("tax-notes");
     var refIdEl = document.getElementById("contract-ref-id");
+    var orderDateEl = document.getElementById("order-date");
 
     if (clientNameEl) clientNameEl.value = contract.customer_name || contract.customer || "";
     if (clientPhoneEl) clientPhoneEl.value = contract.phone || "";
@@ -378,6 +381,12 @@
     if (paymentNotesEl) paymentNotesEl.value = contract.payment_notes || "";
     if (taxNotesEl) taxNotesEl.value = contract.tax_notes || "";
     if (refIdEl) refIdEl.value = contract.ref_id || currentContractId || "";
+    if (orderDateEl && contract.order_date) {
+      orderDateEl.value = contract.order_date;
+      orderDateEl.readOnly = true;
+      orderDateEl.style.pointerEvents = "none";
+      orderDateEl.style.color = "#666";
+    }
     
     if (salesRepEl && contract.sales_rep) {
       for (var i = 0; i < salesRepEl.options.length; i++) {
