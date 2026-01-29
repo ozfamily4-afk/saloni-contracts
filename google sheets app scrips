@@ -2,19 +2,19 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Sozlesmeler");
-    
+
     if (!sheet) {
       sheet = ss.insertSheet("Sozlesmeler");
-      sheet.getRange(1, 1, 1, 10).setValues([["ID", "Customer", "Phone", "Sales Rep", "Total", "Products", "Status", "Created", "Updated", "Contract Data"]]);
+      sheet.getRange(1, 1, 1, 15).setValues([["ID", "Customer", "Phone", "Sales Rep", "Total", "Products", "Status", "Created", "Updated", "Contract Data", "Email", "Address", "Delivery Week", "Tax ID/Notes", "Order Date"]]);
     }
-    
+
     var action = e.parameter.action || "list";
-    
+
     // DELETE
     if (action === "delete") {
       var targetId = String(e.parameter.id);
       var rows = sheet.getDataRange().getValues();
-      
+
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][0]) === targetId) {
           sheet.deleteRow(i + 1);
@@ -30,18 +30,18 @@ function doGet(e) {
         error: "Not found: " + targetId
       })).setMimeType(ContentService.MimeType.JSON);
     }
-    
+
     // LIST (default)
     var rows = sheet.getDataRange().getValues();
     var contracts = [];
-    
+
     for (var i = 1; i < rows.length; i++) {
       var products = [];
       try { products = JSON.parse(rows[i][5] || "[]"); } catch(err) { products = []; }
-      
+
       var contractData = {};
       try { contractData = JSON.parse(rows[i][9] || "{}"); } catch(err) { contractData = {}; }
-      
+
       contracts.push({
         id: rows[i][0],
         customer_name: rows[i][1],
@@ -52,20 +52,22 @@ function doGet(e) {
         status: rows[i][6],
         created_at: rows[i][7],
         updated_at: rows[i][8],
-        address: contractData.address || "",
-        delivery_week: contractData.delivery_week || "",
+        email: contractData.email || rows[i][10] || "",
+        address: contractData.address || rows[i][11] || "",
+        delivery_week: contractData.delivery_week || rows[i][12] || "",
         payment_notes: contractData.payment_notes || "",
-        tax_notes: contractData.tax_notes || "",
-        ref_id: contractData.ref_id || ""
+        tax_notes: contractData.tax_notes || rows[i][13] || "",
+        ref_id: contractData.ref_id || "",
+        order_date: contractData.order_date || rows[i][14] || ""
       });
     }
-    
+
     contracts.sort(function(a, b) {
       return new Date(b.created_at) - new Date(a.created_at);
     });
-    
+
     return ContentService.createTextOutput(JSON.stringify(contracts)).setMimeType(ContentService.MimeType.JSON);
-    
+
   } catch(error) {
     return ContentService.createTextOutput(JSON.stringify({
       error: error.toString()
@@ -79,17 +81,17 @@ function doPost(e) {
     var action = data.action;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Sozlesmeler");
-    
+
     if (!sheet) {
       sheet = ss.insertSheet("Sozlesmeler");
-      sheet.getRange(1, 1, 1, 10).setValues([["ID", "Customer", "Phone", "Sales Rep", "Total", "Products", "Status", "Created", "Updated", "Contract Data"]]);
+      sheet.getRange(1, 1, 1, 15).setValues([["ID", "Customer", "Phone", "Sales Rep", "Total", "Products", "Status", "Created", "Updated", "Contract Data", "Email", "Address", "Delivery Week", "Tax ID/Notes", "Order Date"]]);
     }
-    
+
     // SAVE
     if (action === "save") {
       var id = "SC-" + new Date().getTime();
       var now = new Date().toISOString();
-      
+
       sheet.appendRow([
         id,
         data.customer_name || "",
@@ -100,21 +102,26 @@ function doPost(e) {
         "saved",
         now,
         now,
-        JSON.stringify(data)
+        JSON.stringify(data),
+        data.email || "",
+        data.address || "",
+        data.delivery_week || "",
+        data.tax_notes || "",
+        data.order_date || ""
       ]);
-      
+
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
         id: id,
         status: "saved"
       })).setMimeType(ContentService.MimeType.JSON);
     }
-    
+
     // UPDATE
     if (action === "update") {
       var rows = sheet.getDataRange().getValues();
       var targetId = String(data.id);
-      
+
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][0]) === targetId) {
           var now = new Date().toISOString();
@@ -125,7 +132,12 @@ function doPost(e) {
           sheet.getRange(i + 1, 6).setValue(JSON.stringify(data.products || []));
           sheet.getRange(i + 1, 9).setValue(now);
           sheet.getRange(i + 1, 10).setValue(JSON.stringify(data));
-          
+          sheet.getRange(i + 1, 11).setValue(data.email || "");
+          sheet.getRange(i + 1, 12).setValue(data.address || "");
+          sheet.getRange(i + 1, 13).setValue(data.delivery_week || "");
+          sheet.getRange(i + 1, 14).setValue(data.tax_notes || "");
+          // Order Date (col 15) is NOT updated - it stays as original
+
           return ContentService.createTextOutput(JSON.stringify({
             success: true,
             id: targetId,
