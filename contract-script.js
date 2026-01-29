@@ -469,7 +469,13 @@
       contractData.action = "save";
     }
     
-    console.log("Saving contract:", contractData);
+    console.log("=== DEBUG: Contract Data ===");
+    console.log("Email:", contractData.email);
+    console.log("Address:", contractData.address);
+    console.log("Delivery Week:", contractData.delivery_week);
+    console.log("Tax Notes:", contractData.tax_notes);
+    console.log("Order Date:", contractData.order_date);
+    console.log("Full Data:", contractData);
     
     postToAPI(contractData)
     .then(function(result) {
